@@ -1,0 +1,28 @@
+[server]
+listen = ":8080"
+
+[video]
+type = "gopro"
+
+[video.gopro]
+res = "720"
+fov = 0
+bitrate = 3000
+
+[video.webcam]
+path = "/dev/video0"
+size = "1280x720"
+fps = 15
+format = "mjpeg"
+
+[audio]
+codec = "aac"
+rate = 44100
+
+[stream]
+endpoint = "rtsp://10.0.0.1:8554/stream"
+bitrate = "2M"
+
+[obs]
+address = "ws://10.0.0.3:4455"
+password = ""
