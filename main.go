@@ -1,9 +1,8 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/codecat/go-libs/log"
+	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
 )
 
@@ -22,22 +21,27 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Write([]byte("Nimble IRL"))
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("Access-Control-Allow-Origin", "*")
+		return c.Next()
 	})
 
-	http.HandleFunc("/api/stats", httpStats)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Nimble IRL v2")
+	})
 
-	http.HandleFunc("/api/start", httpStart)
-	http.HandleFunc("/api/stop", httpStop)
+	app.Get("/api/stats", httpStats)
 
-	http.HandleFunc("/api/obs-start", httpObsStart)
-	http.HandleFunc("/api/obs-stop", httpObsStop)
+	app.Get("/api/start", httpStart)
+	app.Get("/api/stop", httpStop)
 
-	http.HandleFunc("/api/scenes", httpScenes)
-	http.HandleFunc("/api/set-scene", httpSetScene)
+	app.Get("/api/obs-start", httpObsStart)
+	app.Get("/api/obs-stop", httpObsStop)
+
+	app.Get("/api/scenes", httpScenes)
+	app.Get("/api/set-scene", httpSetScene)
 
 	log.Info("Listening on %s", viper.GetString("server.listen"))
-	http.ListenAndServe(viper.GetString("server.listen"), nil)
+	app.Listen(viper.GetString("server.listen"))
 }

@@ -1,55 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 )
-
-type ResponseStats struct {
-	Result string `json:"result"`
-
-	LiveEncoding    bool `json:"live_encoding"`
-	LiveOBS         bool `json:"live_obs"`
-	LiveOBSDuration int  `json:"live_obs_duration"`
-
-	Temperature string                       `json:"temp"`
-	Interfaces  map[string]ResponseInterface `json:"ifs"`
-}
-
-type ResponseInterface struct {
-	MBDown int64 `json:"d"`
-	MBUp   int64 `json:"u"`
-}
 
 var gRegexSpacer = regexp.MustCompile(`\s+`)
 
-func httpStats(w http.ResponseWriter, r *http.Request) {
+func httpStats(c *fiber.Ctx) error {
 	// Check if OBS is streaming
 	streamStatus, err := sendOBSRequestWait("GetStreamStatus", nil)
 	if err != nil {
-		writeError(w, 500, "Unable to get OBS stream status: %s", err.Error())
-		return
+		return fmt.Errorf("unable to get OBS stream status: %s", err.Error())
 	}
 
 	// Get temperature measurement
 	cmd := exec.Command("vcgencmd", "measure_temp")
 	res, err := cmd.Output()
 	if err != nil {
-		writeError(w, 500, "Unable to get temperature: %s", err.Error())
-		return
+		return fmt.Errorf("unable to get temperature: %s", err.Error())
 	}
 
 	// Get network transfer statistics
-	resInterfaces := make(map[string]ResponseInterface)
+	resInterfaces := make(map[string]fiber.Map)
 	fh, err := os.Open("/proc/net/dev")
 	if err != nil {
-		writeError(w, 500, "Unable to read network interface statistics")
-		return
+		return fmt.Errorf("unable to read network interface statistics")
 	}
 	data, _ := io.ReadAll(fh)
 	ifaces := strings.Split(string(data), "\n")[2:]
@@ -74,20 +57,20 @@ func httpStats(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		resInterfaces[iface_name] = ResponseInterface{
-			MBDown: mb_down,
-			MBUp:   mb_up,
+		resInterfaces[iface_name] = fiber.Map{
+			"d": mb_down,
+			"u": mb_up,
 		}
 	}
 
-	writeResponse(w, ResponseStats{
-		Result: "OK",
+	return c.JSON(fiber.Map{
+		"result": "OK",
 
-		LiveEncoding:    gStreamCmd != nil,
-		LiveOBS:         streamStatus["outputActive"].(bool),
-		LiveOBSDuration: int(streamStatus["outputDuration"].(float64) / 1000.0),
+		"live_encoding":     gStreamCmd != nil,
+		"live_obs":          streamStatus["outputActive"].(bool),
+		"live_obs_duration": int(streamStatus["outputDuration"].(float64) / 1000.0),
 
-		Temperature: strings.Trim(strings.TrimPrefix(string(res), "temp="), "\r\n"),
-		Interfaces:  resInterfaces,
+		"temp": strings.Trim(strings.TrimPrefix(string(res), "temp="), "\r\n"),
+		"ifs":  resInterfaces,
 	})
 }

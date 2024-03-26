@@ -1,13 +1,14 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
 	"github.com/codecat/go-libs/log"
+	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
 )
 
@@ -20,10 +21,9 @@ func streamMonitor() {
 	log.Warn("Stream command stopped!")
 }
 
-func httpStart(w http.ResponseWriter, r *http.Request) {
+func httpStart(c *fiber.Ctx) error {
 	if gStreamCmd != nil {
-		writeError(w, 400, "Stream has already started")
-		return
+		return fiber.NewError(fiber.StatusBadRequest, "stream has already started")
 	}
 
 	videoType := viper.GetString("video.type")
@@ -32,8 +32,7 @@ func httpStart(w http.ResponseWriter, r *http.Request) {
 	if videoType == "gopro" {
 		err := startGoPro()
 		if err != nil {
-			writeError(w, 500, "Unable to start GoPro: %s", err.Error())
-			return
+			return fiber.NewError(fiber.StatusBadRequest, "unable to start GoPro: %s", err.Error())
 		}
 	}
 
@@ -71,13 +70,12 @@ func httpStart(w http.ResponseWriter, r *http.Request) {
 
 	go streamMonitor()
 
-	writeOK(w)
+	return c.JSON(fiber.Map{"result": "OK"})
 }
 
-func httpStop(w http.ResponseWriter, r *http.Request) {
+func httpStop(c *fiber.Ctx) error {
 	if gStreamCmd == nil {
-		writeError(w, 400, "Stream has not started yet")
-		return
+		return fiber.NewError(fiber.StatusBadRequest, "stream has not started yet")
 	}
 
 	log.Info("Stream stopping")
@@ -89,12 +87,11 @@ func httpStop(w http.ResponseWriter, r *http.Request) {
 	if viper.GetString("video.type") == "gopro" {
 		err := stopGoPro()
 		if err != nil {
-			writeError(w, 500, "Unable to stop GoPro: %s", err.Error())
-			return
+			return fmt.Errorf("unable to stop GoPro: %s", err.Error())
 		}
 	}
 
 	log.Info("Stream stopped")
 
-	writeOK(w)
+	return c.JSON(fiber.Map{"result": "OK"})
 }

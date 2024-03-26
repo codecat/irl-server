@@ -1,47 +1,45 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 type ResponseScenes struct {
 	Result string `json:"result"`
 }
 
-func httpObsStart(w http.ResponseWriter, r *http.Request) {
+func httpObsStart(c *fiber.Ctx) error {
 	_, err := sendOBSRequestWait("StartStream", nil)
 	if err != nil {
-		writeError(w, 500, "Unable to start OBS stream: %s", err.Error())
-		return
+		return fmt.Errorf("unable to start OBS stream: %s", err.Error())
 	}
-	writeOK(w)
+	return c.JSON(fiber.Map{"result": "OK"})
 }
 
-func httpObsStop(w http.ResponseWriter, r *http.Request) {
+func httpObsStop(c *fiber.Ctx) error {
 	_, err := sendOBSRequestWait("StopStream", nil)
 	if err != nil {
-		writeError(w, 500, "Unable to stop OBS stream: %s", err.Error())
-		return
+		return fmt.Errorf("unable to stop OBS stream: %s", err.Error())
 	}
-	writeOK(w)
+	return c.JSON(fiber.Map{"result": "OK"})
 }
 
-func httpScenes(w http.ResponseWriter, r *http.Request) {
+func httpScenes(c *fiber.Ctx) error {
 	res, err := sendOBSRequestWait("GetSceneList", nil)
 	if err != nil {
-		writeError(w, 500, "Unable to get scene list from OBS: %s", err.Error())
-		return
+		return fmt.Errorf("unable to get scene list from OBS: %s", err.Error())
 	}
-	writeResponse(w, res)
+	return c.JSON(res)
 }
 
-func httpSetScene(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-
+func httpSetScene(c *fiber.Ctx) error {
 	data := make(map[string]interface{})
-	data["sceneName"] = values.Get("scene")
+	data["sceneName"] = c.Query("scene")
 	_, err := sendOBSRequest("SetCurrentProgramScene", data)
 	if err != nil {
-		writeError(w, 500, "Unable to set current scene: %s", err.Error())
-		return
+		return fmt.Errorf("unable to set current scene: %s", err.Error())
 	}
-	writeOK(w)
+	return c.JSON(fiber.Map{"result": "OK"})
 }
