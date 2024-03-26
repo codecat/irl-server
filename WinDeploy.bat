@@ -3,6 +3,6 @@
 set GOOS=linux
 set GOARCH=arm64
 go build -ldflags="-s -w" -o __deploy
-scp __deploy 10.0.0.2:/home/pi/encoder-server/encoder-server
-scp config.toml 10.0.0.2:/home/pi/encoder-server/
+scp __deploy irlpi:/home/nimble/irl/irl-server
+scp config.toml irlpi:/home/nimble/irl/
 del __deploy
