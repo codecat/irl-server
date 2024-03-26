@@ -2,7 +2,7 @@
 listen = ":8080"
 
 [video]
-type = "gopro"
+type = "webcam"
 
 [video.gopro]
 res = "720"
@@ -20,7 +20,7 @@ codec = "aac"
 rate = 44100
 
 [stream]
-endpoint = "rtsp://10.0.0.1:8554/stream"
+endpoint = "srt://10.0.0.3:49992?mode=caller"
 bitrate = "2M"
 
 [obs]
