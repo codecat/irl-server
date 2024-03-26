@@ -60,8 +60,16 @@ func httpStart(c *fiber.Ctx) error {
 	args = append(args, "-c:a", viper.GetString("audio.codec"))
 	args = append(args, "-ar", strconv.Itoa(viper.GetInt("audio.rate")))
 
-	// Output to RTMP endpoint
-	args = append(args, "-f", "rtsp", viper.GetString("stream.endpoint"))
+	// Output to endpoint
+	endpoint := viper.GetString("stream.endpoint")
+	if strings.HasPrefix(endpoint, "rtsp://") {
+		args = append(args, "-f", "rtsp")
+	} else if strings.HasPrefix(endpoint, "srt://") {
+		args = append(args, "-f", "mpegts")
+	} else {
+		return fmt.Errorf("unknown format for endpoint \"%s\"", endpoint)
+	}
+	args = append(args, endpoint)
 
 	log.Info("Stream starting", "ffmpeg", strings.Join(args, " "))
 
