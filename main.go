@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/codecat/go-libs/log"
+	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
 )
@@ -10,14 +10,16 @@ func main() {
 	viper.AddConfigPath(".")
 	viper.ReadInConfig()
 
+	log.SetLevel(log.DebugLevel)
+
 	go loopOBS()
 
 	if viper.GetString("video.type") == "gopro" {
 		ip, err := findGoProIP()
 		if err != nil {
-			log.Error("Unable to find GoPro IP address: %s", err.Error())
+			log.Error("Unable to find GoPro IP address", "err", err.Error())
 		} else {
-			log.Info("GoPro IP address: %s", ip)
+			log.Info("Found GoPro IP address", "ip", ip)
 		}
 	}
 
@@ -42,6 +44,6 @@ func main() {
 	app.Get("/api/scenes", httpScenes)
 	app.Get("/api/set-scene", httpSetScene)
 
-	log.Info("Listening on %s", viper.GetString("server.listen"))
+	log.Infof("Listening on %s", viper.GetString("server.listen"))
 	app.Listen(viper.GetString("server.listen"))
 }

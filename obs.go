@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/codecat/go-libs/log"
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
@@ -98,7 +98,7 @@ func loopOBS() {
 		var err error
 		gOBSWsc, _, err = websocket.DefaultDialer.Dial(viper.GetString("obs.address"), nil)
 		if err != nil {
-			log.Error("Unable to open websocket to OBS: %s", err.Error())
+			log.Error("Unable to open websocket to OBS", "err", err.Error())
 			continue
 		}
 
@@ -106,7 +106,7 @@ func loopOBS() {
 			var msg OBSMessage
 			err = gOBSWsc.ReadJSON(&msg)
 			if err != nil {
-				log.Error("Unable to read message from websocket: %s", err.Error())
+				log.Error("Unable to read message from websocket", "err", err.Error())
 				break
 			}
 
@@ -127,11 +127,11 @@ func loopOBS() {
 
 			case 5: // Event
 				//typeName := msg.get("eventType").(string)
-				//log.Trace("OBS event: %s", typeName)
+				//log.Trace("OBS event", "typeName", typeName)
 
 			case 7: // RequestResponse
 				//rtype := msg.get("requestType").(string)
-				//log.Trace("RequestResponse: %s: %v", rtype, msg)
+				//log.Tracef("RequestResponse: %s: %v", rtype, msg)
 
 				rid := msg.get("requestId").(string)
 				responseData := msg.get("responseData")

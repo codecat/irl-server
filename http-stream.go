@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/codecat/go-libs/log"
+	"github.com/charmbracelet/log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/spf13/viper"
 )
@@ -63,7 +63,7 @@ func httpStart(c *fiber.Ctx) error {
 	// Output to RTMP endpoint
 	args = append(args, "-f", "rtsp", viper.GetString("stream.endpoint"))
 
-	log.Info("Stream starting: ffmpeg %s", strings.Join(args, " "))
+	log.Info("Stream starting", "ffmpeg", strings.Join(args, " "))
 
 	gStreamCmd = exec.Command("ffmpeg", args...)
 	gStreamCmd.Start()
