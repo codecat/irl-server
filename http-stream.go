@@ -52,6 +52,10 @@ func httpStart(c *fiber.Ctx) error {
 		args = append(args, "-video_size", viper.GetString("video.webcam.size"))
 		args = append(args, "-i", viper.GetString("video.webcam.path"))
 
+		// Include audio from alsa
+		args = append(args, "-f", "alsa")
+		args = append(args, "-i", viper.GetString("video.webcam.audio"))
+
 		// Encode using specific bitrate
 		args = append(args, "-b:v", viper.GetString("stream.bitrate"))
 	}

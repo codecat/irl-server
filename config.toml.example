@@ -14,6 +14,7 @@ path = "/dev/video0"
 size = "1280x720"
 fps = 15
 format = "mjpeg"
+audio = "hw:MS2109"
 
 [audio]
 codec = "aac"
